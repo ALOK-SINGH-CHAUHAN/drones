@@ -1,0 +1,121 @@
+Panels:
+  - Class: rviz_common/Displays
+    Help Height: 0
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Camera Image1
+        - /SLAM1
+        - /Detection1
+        - /Mapping1
+        - /Localization1
+      Splitter Ratio: 0.5
+    Tree Height: 700
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    # ─── Global Frame ────────────────────────────────────────────────────
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+
+    # ─── Camera Image ────────────────────────────────────────────────────
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Name: Camera Image
+      Topic:
+        Value: /camera/image_raw
+      Max Value: 1.0
+      Min Value: 0.0
+
+    # ─── Detection Annotated Image ───────────────────────────────────────
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Name: Detection View
+      Topic:
+        Value: /detection/detection/annotated_image
+
+    # ─── SLAM Pose ───────────────────────────────────────────────────────
+    - Class: rviz_default_plugins/Pose
+      Enabled: true
+      Name: SLAM Pose
+      Topic:
+        Value: /slam/slam/pose
+      Shape:
+        Type: Arrow
+        Color: 0; 255; 0
+
+    # ─── SLAM Map Points ────────────────────────────────────────────────
+    - Class: rviz_default_plugins/PointCloud2
+      Enabled: true
+      Name: SLAM Map Points
+      Topic:
+        Value: /slam/slam/map_points
+      Size (m): 0.02
+      Color: 255; 255; 0
+
+    # ─── Occupancy Grid Map ─────────────────────────────────────────────
+    - Class: rviz_default_plugins/Map
+      Enabled: true
+      Name: Occupancy Grid
+      Topic:
+        Value: /mapping/map
+
+    # ─── Localization Particles ──────────────────────────────────────────
+    - Class: rviz_default_plugins/PoseArray
+      Enabled: true
+      Name: MCL Particles
+      Topic:
+        Value: /localization/localization/particles
+      Shape:
+        Type: Arrow
+        Color: 255; 0; 255
+      Arrow Length: 0.1
+
+    # ─── Localization Pose ───────────────────────────────────────────────
+    - Class: rviz_default_plugins/Pose
+      Enabled: true
+      Name: Localized Pose
+      Topic:
+        Value: /localization/localization/pose
+      Shape:
+        Type: Arrow
+        Color: 0; 255; 255
+        Arrow Length: 0.3
+
+    # ─── Detected Objects ────────────────────────────────────────────────
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Tracked Objects
+      Topic:
+        Value: /cognition/prediction/visualization
+
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+    Frame Rate: 30
+
+  Name: root
+
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic: /goal_pose
+
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 10
+      Name: Current View
+      Target Frame: base_link
+      Yaw: 3.14
+      Pitch: 0.8

@@ -1,0 +1,37 @@
+{
+    "names": {
+        "antigravity_bringup": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_interfaces": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_perception": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_slam": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_detection": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_mapping": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_localization": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_cognition": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_control": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_planning": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        },
+        "antigravity_safety": {
+            "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
+        }
+    }
+}

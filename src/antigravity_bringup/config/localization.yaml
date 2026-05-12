@@ -1,0 +1,64 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — MCL Localization Configuration
+# Particle filter parameters for map-based localization
+# ═══════════════════════════════════════════════════════════════════════
+
+mcl_localization:
+  ros__parameters:
+    # Particle filter settings
+    num_particles: 500                    # Initial particle count
+    min_particles: 100                    # Adaptive minimum
+    max_particles: 2000                   # Adaptive maximum
+    
+    # Resampling
+    resample_threshold: 0.5              # Neff/N ratio to trigger resampling
+    resample_method: "systematic"        # "multinomial", "systematic", "stratified"
+    
+    # Motion model (odometry noise)
+    alpha1: 0.2                          # Rotation noise from rotation
+    alpha2: 0.2                          # Rotation noise from translation
+    alpha3: 0.2                          # Translation noise from translation
+    alpha4: 0.2                          # Translation noise from rotation
+    
+    # Sensor model
+    sensor_model_type: "likelihood_field"  # "beam" or "likelihood_field"
+    z_hit: 0.95                          # Weight for expected measurement
+    z_rand: 0.05                         # Weight for random measurement
+    sigma_hit: 0.2                       # Std dev for hit model (meters)
+    max_range: 10.0                      # Max sensor range
+    
+    # Convergence
+    convergence_threshold: 0.3           # Position std dev threshold (meters)
+    convergence_angular_threshold: 0.1   # Angular std dev threshold (radians)
+    
+    # Map
+    map_topic: "/mapping/map"
+    use_map_topic: true
+    
+    # Input
+    slam_pose_topic: "/slam/slam/pose"
+    odom_topic: "/odom"
+    
+    # Output
+    pose_topic: "localization/pose"
+    particle_cloud_topic: "localization/particles"
+    state_topic: "localization/state"
+    
+    # Frames
+    map_frame: "map"
+    odom_frame: "odom"
+    base_frame: "base_link"
+    
+    # Update policy
+    update_min_d: 0.1                    # Min distance (m) before update
+    update_min_a: 0.1                    # Min angle (rad) before update
+    update_rate_hz: 20.0                 # Max update rate
+    
+    # Initial pose
+    initial_pose_x: 0.0
+    initial_pose_y: 0.0
+    initial_pose_z: 1.5
+    initial_pose_yaw: 0.0
+    initial_cov_xx: 1.0                  # Initial spread (meters^2)
+    initial_cov_yy: 1.0
+    initial_cov_aa: 0.5                  # Initial angular spread (rad^2)

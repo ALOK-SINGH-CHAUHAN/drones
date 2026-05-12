@@ -1,0 +1,126 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — Cognition Layer Configuration
+# OctoMap world model, semantic segmentation, prediction engine
+# ═══════════════════════════════════════════════════════════════════════
+
+world_model:
+  ros__parameters:
+    # OctoMap settings
+    resolution: 0.1                       # Voxel resolution (meters)
+    frame_id: "map"
+    sensor_frame_id: "camera_optical_frame"
+    
+    # Depth input
+    depth_topic: "/camera/depth"
+    pointcloud_topic: "/camera/pointcloud"
+    use_pointcloud: false                 # Use depth image instead
+    
+    # Occupancy thresholds
+    occupancy_min_threshold: 0.12
+    occupancy_max_threshold: 0.97
+    prob_hit: 0.7
+    prob_miss: 0.4
+    
+    # Map limits
+    max_range: 8.0                        # Max sensor range for insertion
+    min_range: 0.3
+    
+    # Memory management
+    max_memory_mb: 512                    # Memory limit for map
+    map_pruning_enabled: true
+    prune_interval_s: 30.0
+    
+    # Publishing
+    publish_rate_hz: 10
+    publish_free_space: true
+    publish_occupied: true
+    
+    # Raycast settings
+    compress_map: true
+    incremental_update: true
+
+semantic_segmentation:
+  ros__parameters:
+    # SAM model settings
+    sam_model_path: "models/sam_vit_b.pt"
+    sam_model_type: "vit_b"               # vit_h, vit_l, vit_b
+    
+    # Custom classifier
+    classifier_model_path: "models/semantic_classifier.pt"
+    classifier_type: "resnet18"
+    
+    # Classes
+    class_names:
+      - "unknown"
+      - "doorway"
+      - "corridor"
+      - "wall"
+      - "window"
+      - "road"
+      - "landing_zone"
+      - "obstacle"
+      - "floor"
+      - "ceiling"
+    num_classes: 10
+    
+    # Inference settings
+    device: "cuda:0"
+    use_fp16: true
+    batch_size: 1
+    points_per_side: 16                   # SAM auto-mask grid density
+    
+    # Performance
+    inference_rate_hz: 10                 # Run at 10 Hz (100ms budget)
+    confidence_threshold: 0.6
+    
+    # Input/Output
+    image_topic: "/camera/image_raw"
+    depth_topic: "/camera/depth"
+    semantic_map_topic: "semantics/labeled_map"
+    segmentation_image_topic: "semantics/segmented_image"
+    
+    # 3D propagation
+    propagate_to_3d: true
+    octomap_topic: "/cognition/world_model/octomap"
+    
+    # Frame
+    frame_id: "camera_optical_frame"
+
+prediction_engine:
+  ros__parameters:
+    # Tracker settings
+    max_track_age: 30                     # Frames before deleting lost track
+    min_hits_to_confirm: 3                # Hits before track is confirmed
+    iou_threshold: 0.3                    # Min IoU for detection-track match
+    
+    # Kalman filter model
+    process_noise_pos: 1.0                # Position process noise
+    process_noise_vel: 1.0                # Velocity process noise
+    measurement_noise: 1.0                # Measurement noise
+    
+    # Prediction
+    prediction_horizon_s: 2.0             # Predict 2 seconds ahead
+    prediction_steps: 20                  # Number of prediction timesteps
+    
+    # LSTM (optional upgrade)
+    use_lstm: false
+    lstm_model_path: "models/trajectory_lstm.pt"
+    lstm_confidence_threshold: 0.7        # Use LSTM above this confidence
+    lstm_sequence_length: 20              # Input sequence length
+    lstm_hidden_size: 64
+    
+    # Hungarian assignment
+    assignment_method: "hungarian"        # "hungarian" or "greedy"
+    max_assignment_cost: 50.0
+    
+    # Input/Output
+    detection_topic: "/detection/detections"
+    tracks_topic: "prediction/tracks"
+    predicted_trajectories_topic: "prediction/trajectories"
+    
+    # Publishing
+    publish_rate_hz: 20
+    publish_visualization: true
+    
+    # Frame
+    tracking_frame: "map"

@@ -1,0 +1,302 @@
+<?xml version="1.0"?>
+<!--
+  ANTIGRAVITY Drone URDF Model
+  =============================
+  Simplified drone model with sensors for Gazebo simulation.
+  Includes: frame, 4 rotors, camera, IMU, barometer
+-->
+<robot name="antigravity_drone" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ═══ MATERIALS ═══════════════════════════════════════════════════ -->
+  <material name="dark_carbon">
+    <color rgba="0.15 0.15 0.15 1.0"/>
+  </material>
+  <material name="orange_accent">
+    <color rgba="1.0 0.45 0.0 1.0"/>
+  </material>
+  <material name="silver">
+    <color rgba="0.75 0.75 0.78 1.0"/>
+  </material>
+
+  <!-- ═══ BASE LINK (Center of Mass) ═════════════════════════════════ -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.25 0.25 0.08"/>
+      </geometry>
+      <material name="dark_carbon"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.30 0.30 0.10"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.5"/>
+      <inertia ixx="0.029" ixy="0" ixz="0" iyy="0.029" iyz="0" izz="0.055"/>
+    </inertial>
+  </link>
+
+  <!-- ═══ ARMS (4 arms at 45° offsets) ═══════════════════════════════ -->
+  <link name="arm_front_left">
+    <visual>
+      <origin xyz="0.1 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.008" length="0.22"/></geometry>
+      <material name="dark_carbon"/>
+    </visual>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+  <joint name="arm_fl_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_front_left"/>
+    <origin xyz="0.08 0.08 0.01" rpy="0 1.5708 0.7854"/>
+  </joint>
+
+  <link name="arm_front_right">
+    <visual>
+      <origin xyz="0.1 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.008" length="0.22"/></geometry>
+      <material name="dark_carbon"/>
+    </visual>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+  <joint name="arm_fr_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_front_right"/>
+    <origin xyz="0.08 -0.08 0.01" rpy="0 1.5708 -0.7854"/>
+  </joint>
+
+  <link name="arm_rear_left">
+    <visual>
+      <origin xyz="0.1 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.008" length="0.22"/></geometry>
+      <material name="dark_carbon"/>
+    </visual>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+  <joint name="arm_rl_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_rear_left"/>
+    <origin xyz="-0.08 0.08 0.01" rpy="0 1.5708 2.3562"/>
+  </joint>
+
+  <link name="arm_rear_right">
+    <visual>
+      <origin xyz="0.1 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.008" length="0.22"/></geometry>
+      <material name="dark_carbon"/>
+    </visual>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+  <joint name="arm_rr_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_rear_right"/>
+    <origin xyz="-0.08 -0.08 0.01" rpy="0 1.5708 -2.3562"/>
+  </joint>
+
+  <!-- ═══ ROTORS ═════════════════════════════════════════════════════ -->
+  <link name="rotor_fl">
+    <visual>
+      <geometry><cylinder radius="0.065" length="0.005"/></geometry>
+      <material name="orange_accent"/>
+    </visual>
+    <inertial>
+      <mass value="0.02"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00002"/>
+    </inertial>
+  </link>
+  <joint name="rotor_fl_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="rotor_fl"/>
+    <origin xyz="0.175 0.175 0.035" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="rotor_fr">
+    <visual>
+      <geometry><cylinder radius="0.065" length="0.005"/></geometry>
+      <material name="orange_accent"/>
+    </visual>
+    <inertial>
+      <mass value="0.02"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00002"/>
+    </inertial>
+  </link>
+  <joint name="rotor_fr_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="rotor_fr"/>
+    <origin xyz="0.175 -0.175 0.035" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="rotor_rl">
+    <visual>
+      <geometry><cylinder radius="0.065" length="0.005"/></geometry>
+      <material name="orange_accent"/>
+    </visual>
+    <inertial>
+      <mass value="0.02"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00002"/>
+    </inertial>
+  </link>
+  <joint name="rotor_rl_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="rotor_rl"/>
+    <origin xyz="-0.175 0.175 0.035" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="rotor_rr">
+    <visual>
+      <geometry><cylinder radius="0.065" length="0.005"/></geometry>
+      <material name="orange_accent"/>
+    </visual>
+    <inertial>
+      <mass value="0.02"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00002"/>
+    </inertial>
+  </link>
+  <joint name="rotor_rr_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="rotor_rr"/>
+    <origin xyz="-0.175 -0.175 0.035" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- ═══ CAMERA (Intel RealSense D435i) ═════════════════════════════ -->
+  <link name="camera_link">
+    <visual>
+      <geometry><box size="0.09 0.025 0.025"/></geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.09 0.025 0.025"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.072"/>
+      <inertia ixx="0.000005" ixy="0" ixz="0" iyy="0.00004" iyz="0" izz="0.00004"/>
+    </inertial>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.12 0 -0.02" rpy="0 0.15 0"/>
+  </joint>
+
+  <link name="camera_optical_frame"/>
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+  </joint>
+
+  <!-- ═══ IMU ════════════════════════════════════════════════════════ -->
+  <link name="imu_link">
+    <visual>
+      <geometry><box size="0.02 0.02 0.005"/></geometry>
+      <material name="silver"/>
+    </visual>
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+    </inertial>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.01" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ═══ GAZEBO PLUGINS ═════════════════════════════════════════════ -->
+
+  <!-- RGB Camera Plugin -->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="drone_camera">
+      <update_rate>30</update_rate>
+      <camera name="realsense">
+        <horizontal_fov>1.2112</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip><near>0.1</near><far>30.0</far></clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.005</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <ros>
+          <remapping>image_raw:=/drone/camera/image_raw</remapping>
+          <remapping>camera_info:=/drone/camera/camera_info</remapping>
+        </ros>
+        <camera_name>drone_camera</camera_name>
+        <frame_name>camera_optical_frame</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- Depth Camera Plugin -->
+  <gazebo reference="camera_link">
+    <sensor type="depth" name="drone_depth">
+      <update_rate>30</update_rate>
+      <camera name="depth">
+        <horizontal_fov>1.2112</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip><near>0.3</near><far>10.0</far></clip>
+      </camera>
+      <plugin name="depth_controller" filename="libgazebo_ros_camera.so">
+        <ros>
+          <remapping>image_raw:=/drone/camera/depth</remapping>
+          <remapping>points:=/drone/camera/points</remapping>
+        </ros>
+        <camera_name>drone_depth</camera_name>
+        <frame_name>camera_optical_frame</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- IMU Plugin -->
+  <gazebo reference="imu_link">
+    <sensor type="imu" name="drone_imu">
+      <update_rate>200</update_rate>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.0003</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.0003</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.0003</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="imu_controller" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <remapping>~/out:=/drone/imu/data</remapping>
+        </ros>
+        <frame_name>imu_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot>

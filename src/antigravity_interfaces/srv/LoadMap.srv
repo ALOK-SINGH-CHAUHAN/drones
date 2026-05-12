@@ -1,0 +1,8 @@
+# Load a map file into the map server
+string map_file_path        # Path to .pgm/.yaml or .bt map file
+string map_type             # "occupancy_grid" or "octomap"
+float32 resolution          # Override resolution (0 = use file default)
+---
+bool success
+string message
+float32 load_time_seconds

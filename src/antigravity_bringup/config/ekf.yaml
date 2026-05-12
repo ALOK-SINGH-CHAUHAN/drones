@@ -1,0 +1,71 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — EKF State Estimator Configuration
+# Extended Kalman Filter fusing SLAM + MCL + IMU + Barometer
+# ═══════════════════════════════════════════════════════════════════════
+
+ekf_state_estimator:
+  ros__parameters:
+    # ─── Filter Configuration ────────────────────────────────────────
+    update_rate_hz: 100.0            # EKF prediction rate
+    state_dim: 15                    # [pos(3), vel(3), quat(4), accel_bias(3), gyro_bias(2)]
+
+    # ─── Process Noise (Q matrix diagonal) ──────────────────────────
+    process_noise_position: 0.01     # [m^2] Position process noise
+    process_noise_velocity: 0.1      # [(m/s)^2] Velocity process noise
+    process_noise_orientation: 0.001 # [rad^2] Orientation process noise
+    process_noise_accel_bias: 0.0001 # Accelerometer bias random walk
+    process_noise_gyro_bias: 0.00001 # Gyroscope bias random walk
+
+    # ─── SLAM Measurement Noise (R_slam) ────────────────────────────
+    slam_position_noise: 0.05        # [m^2] SLAM position measurement noise
+    slam_orientation_noise: 0.01     # [rad^2] SLAM orientation noise
+    slam_max_innovation: 3.0         # Mahalanobis distance for outlier rejection
+
+    # ─── MCL Measurement Noise (R_mcl) ──────────────────────────────
+    mcl_position_noise: 0.15         # [m^2] MCL position noise (coarser than SLAM)
+    mcl_orientation_noise: 0.05      # [rad^2] MCL orientation noise
+    mcl_max_innovation: 5.0          # Outlier threshold
+
+    # ─── IMU Configuration ──────────────────────────────────────────
+    imu_accel_noise: 0.05            # [(m/s^2)^2] Accelerometer noise
+    imu_gyro_noise: 0.001            # [(rad/s)^2] Gyroscope noise
+    gravity_magnitude: 9.81          # [m/s^2] Local gravity
+
+    # ─── Barometer Configuration ────────────────────────────────────
+    baro_altitude_noise: 0.5         # [m^2] Barometer altitude noise
+    baro_max_innovation: 4.0         # Outlier threshold
+
+    # ─── Covariance Management ──────────────────────────────────────
+    use_joseph_form: true            # Joseph covariance update (more numerically stable)
+    max_covariance_norm: 1000.0      # Reset filter if covariance diverges
+
+    # ─── Topics ─────────────────────────────────────────────────────
+    slam_pose_topic: "/slam/pose"
+    mcl_pose_topic: "/localization/state"
+    imu_topic: "/imu/data"
+    baro_topic: "/sensors/barometer"
+    ekf_output_topic: "/control/ekf_state"
+
+trajectory_optimizer:
+  ros__parameters:
+    # ─── Polynomial Order ────────────────────────────────────────────
+    polynomial_order: 7              # 7th order for minimum snap
+    continuity_order: 4              # C4 continuity (pos, vel, acc, jerk, snap)
+
+    # ─── Dynamic Constraints ────────────────────────────────────────
+    max_velocity_mps: 2.0            # Maximum velocity
+    max_acceleration_mps2: 3.0       # Maximum acceleration
+    max_jerk_mps3: 10.0              # Maximum jerk
+
+    # ─── Time Allocation ────────────────────────────────────────────
+    time_allocation: "trapezoidal"   # "trapezoidal" or "uniform"
+    segment_velocity_mps: 1.5        # Cruise velocity for time allocation
+
+    # ─── Safety Corridor ────────────────────────────────────────────
+    corridor_width_m: 1.0            # Safety corridor around trajectory
+    check_feasibility: true          # Verify dynamics feasibility
+
+    # ─── Topics ─────────────────────────────────────────────────────
+    waypoint_path_topic: "/planning/global_path"
+    trajectory_topic: "/control/trajectory"
+    setpoint_topic: "/control/trajectory_setpoint"

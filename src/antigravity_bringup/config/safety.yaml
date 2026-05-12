@@ -1,0 +1,97 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — Safety Layer Configuration
+# Covers: Safety Arbiter, Geofence Enforcement, System Monitor
+# ═══════════════════════════════════════════════════════════════════════
+
+safety_arbiter:
+  ros__parameters:
+    # ─── Monitoring Rates ────────────────────────────────────────────
+    check_rate_hz: 20.0              # Safety check frequency
+    heartbeat_timeout_s: 2.0         # Max time without node heartbeat
+
+    # ─── Battery Thresholds ──────────────────────────────────────────
+    battery_warning_pct: 30.0        # Warning level (%)
+    battery_critical_pct: 15.0       # Force landing level (%)
+    battery_emergency_pct: 8.0       # Emergency power-off level (%)
+
+    # ─── Collision Avoidance ─────────────────────────────────────────
+    min_obstacle_distance_m: 1.0     # Minimum distance to any obstacle
+    collision_warning_distance_m: 2.0  # Warning distance
+    emergency_stop_distance_m: 0.5   # Hard stop distance
+
+    # ─── SLAM Quality ───────────────────────────────────────────────
+    slam_tracking_timeout_s: 3.0     # Max time without valid SLAM pose
+    localization_quality_threshold: 0.3  # Minimum MCL quality score
+
+    # ─── State Escalation ────────────────────────────────────────────
+    # STATE_NOMINAL = 0, STATE_WARNING = 1, STATE_HOLD = 2
+    # STATE_EMERGENCY_LAND = 3, STATE_RETURN_HOME = 4
+    auto_land_on_critical_battery: true
+    return_home_on_slam_lost: true
+    hold_on_obstacle_close: true
+
+    # ─── Command Filtering ──────────────────────────────────────────
+    max_velocity_override_mps: 0.5   # Velocity limit during warning state
+    max_altitude_m: 30.0             # Absolute altitude ceiling
+    min_altitude_m: 0.3              # Minimum altitude (no ground collision)
+
+    # ─── Topics ─────────────────────────────────────────────────────
+    cmd_vel_input_topic: "/control/cmd_vel"
+    cmd_vel_output_topic: "/control/cmd_vel_safe"
+    safety_status_topic: "/safety/status"
+
+geofence:
+  ros__parameters:
+    # ─── Fence Type ─────────────────────────────────────────────────
+    fence_type: "cylinder"           # "cylinder" or "polygon"
+
+    # ─── Cylinder Geofence ──────────────────────────────────────────
+    center_x: 0.0                    # [m] Fence center X
+    center_y: 0.0                    # [m] Fence center Y
+    radius_m: 50.0                   # [m] Cylinder radius
+    max_altitude_m: 30.0             # [m] Altitude ceiling
+    min_altitude_m: 0.3              # [m] Altitude floor
+
+    # ─── Polygon Geofence (alternative) ─────────────────────────────
+    # polygon_vertices_x: [0, 100, 100, 0]
+    # polygon_vertices_y: [0, 0, 100, 100]
+
+    # ─── Margins ────────────────────────────────────────────────────
+    soft_margin_m: 5.0               # Warning margin inside boundary
+    hard_margin_m: 2.0               # Hard stop margin inside boundary
+
+    # ─── Visualization ──────────────────────────────────────────────
+    publish_visualization: true
+    visualization_rate_hz: 1.0
+
+    # ─── Topics ─────────────────────────────────────────────────────
+    pose_topic: "/control/ekf_state"
+    geofence_status_topic: "/safety/geofence_status"
+
+system_monitor:
+  ros__parameters:
+    # ─── Monitoring ─────────────────────────────────────────────────
+    monitor_rate_hz: 2.0             # Health check frequency
+
+    # ─── CPU Thresholds ─────────────────────────────────────────────
+    cpu_warning_pct: 85.0
+    cpu_critical_pct: 95.0
+
+    # ─── Memory Thresholds ──────────────────────────────────────────
+    memory_warning_pct: 80.0
+    memory_critical_pct: 90.0
+
+    # ─── Temperature Thresholds ─────────────────────────────────────
+    temp_warning_c: 75.0
+    temp_critical_c: 85.0
+
+    # ─── GPU (Jetson) ───────────────────────────────────────────────
+    gpu_warning_pct: 90.0
+    gpu_critical_pct: 98.0
+
+    # ─── Disk ───────────────────────────────────────────────────────
+    disk_warning_pct: 85.0
+    disk_critical_pct: 95.0
+
+    # ─── Topics ─────────────────────────────────────────────────────
+    health_topic: "/safety/system_health"

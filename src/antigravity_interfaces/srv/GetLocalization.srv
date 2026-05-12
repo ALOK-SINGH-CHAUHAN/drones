@@ -1,0 +1,5 @@
+# Get current localization state
+bool include_particle_cloud    # Include full particle cloud (expensive)
+---
+antigravity_interfaces/LocalizationState state
+antigravity_interfaces/ParticleCloud particles   # Only if requested
