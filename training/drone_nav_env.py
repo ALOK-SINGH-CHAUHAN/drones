@@ -62,6 +62,8 @@ class DroneNavEnv(gym.Env):
         self.step_count = 0
         self.battery = 100.0
         self.cumulative_reward = 0.0
+        self.prev_goal_dist = 0.0
+        self.prev_action = np.zeros(3)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -80,6 +82,7 @@ class DroneNavEnv(gym.Env):
         self.battery = 100.0
         self.step_count = 0
         self.cumulative_reward = 0.0
+        self.prev_action = np.zeros(3)
 
         # Generate random obstacles
         n_obs = self.np_random.integers(5, 20)
@@ -88,7 +91,10 @@ class DroneNavEnv(gym.Env):
             ox = self.np_random.uniform(-half, half)
             oy = self.np_random.uniform(-half, half)
             r = self.np_random.uniform(0.3, 1.5)
-            self.obstacles.append({'pos': np.array([ox, oy, 1.5]), 'radius': r})
+            obs_pos = np.array([ox, oy, 1.5])
+            if np.linalg.norm(obs_pos[:2] - self.drone_pos[:2]) > r + 1.0 and \
+               np.linalg.norm(obs_pos[:2] - self.goal[:2]) > r + 1.0:
+                self.obstacles.append({'pos': obs_pos, 'radius': r})
 
         # Walls
         half_map = self.map_size / 2
@@ -101,6 +107,7 @@ class DroneNavEnv(gym.Env):
 
         obs = self._get_observation()
         info = {'distance_to_goal': np.linalg.norm(self.goal - self.drone_pos)}
+        self.prev_goal_dist = info['distance_to_goal']
         return obs, info
 
     def step(self, action):
@@ -137,15 +144,25 @@ class DroneNavEnv(gym.Env):
         # Reward
         reward = 0.0
         reward -= 0.01  # Time penalty
-        reward += max(0, 1.0 - goal_dist / self.map_size)  # Progress
-        reward -= np.linalg.norm(action) * 0.005  # Energy
+        
+        # Potential-based progress reward
+        progress = self.prev_goal_dist - goal_dist
+        self.prev_goal_dist = goal_dist
+        reward += progress * 10.0  # Dense progress reward
+        
+        reward -= np.linalg.norm(action) * 0.005  # Energy penalty
+        
+        # Smoothness / jerk penalty
+        jerk = np.linalg.norm(action - self.prev_action)
+        self.prev_action = action.copy()
+        reward -= jerk * 0.01
 
         if collision:
-            reward -= 10.0
+            reward -= 50.0  # Harsh penalty
         if goal_reached:
-            reward += 50.0
+            reward += 100.0  # High bonus
         if self.battery <= 0:
-            reward -= 5.0
+            reward -= 10.0
 
         # Termination conditions
         terminated = goal_reached or collision or self.battery <= 0
