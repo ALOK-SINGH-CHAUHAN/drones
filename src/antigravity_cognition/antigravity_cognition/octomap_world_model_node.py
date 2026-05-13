@@ -8,7 +8,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from sensor_msgs.msg import Image, PointCloud2, PointField
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PoseArray, Pose
 from cv_bridge import CvBridge
 import numpy as np
 import time
@@ -41,12 +41,16 @@ class OctoMapWorldModelNode(Node):
 
         self._pub_occ = self.create_publisher(PointCloud2, 'world_model/octomap', reliable_qos)
         self._pub_free = self.create_publisher(PointCloud2, 'world_model/free_space', reliable_qos)
+        self._pub_lz = self.create_publisher(PoseArray, 'world_model/landing_zones', reliable_qos)
+        
         self._sub_depth = self.create_subscription(Image, '/camera/depth', self._depth_cb, sensor_qos)
+        self._sub_sem = self.create_subscription(Image, '/semantics/raw_labels', self._sem_cb, sensor_qos)
         self._sub_pose = self.create_subscription(PoseStamped, '/slam/slam/pose', self._pose_cb, sensor_qos)
 
         self._bridge = CvBridge()
         self._voxel_map = {}
         self._semantic_map = {}
+        self._last_sem = None
         self._pose = None
         self._lock = threading.Lock()
         self._fx, self._fy, self._cx, self._cy = 615.67, 615.96, 326.07, 240.25
@@ -56,6 +60,10 @@ class OctoMapWorldModelNode(Node):
         self.create_timer(1.0 / pub_rate, self._publish)
         self.create_timer(5.0, self._diag)
         self.get_logger().info(f'World model: res={self._res}m')
+
+    def _sem_cb(self, msg):
+        try: self._last_sem = self._bridge.imgmsg_to_cv2(msg, 'mono8')
+        except: pass
 
     def _pose_cb(self, msg): self._pose = msg
 
@@ -83,6 +91,13 @@ class OctoMapWorldModelNode(Node):
                     zm = cam[2] - yc
                     k = self._to_key(xm, ym, zm)
                     self._update(k, True)
+
+                    # Semantic association
+                    if self._last_sem is not None and self._last_sem.shape[:2] == depth.shape[:2]:
+                        cls_id = self._last_sem[v, u]
+                        if cls_id > 0:
+                            self._semantic_map[k] = cls_id
+
                     for t in np.linspace(0, 0.7, 3):
                         fk = self._to_key(cam[0]+t*(xm-cam[0]), cam[1]+t*(ym-cam[1]), cam[2]+t*(zm-cam[2]))
                         if fk != k: self._update(fk, False)
@@ -104,19 +119,70 @@ class OctoMapWorldModelNode(Node):
     def _publish(self):
         stamp = self.get_clock().now().to_msg()
         with self._lock:
-            occ = [self._to_world(*k) for k, v in self._voxel_map.items() if 1.0/(1+np.exp(-v)) > 0.65]
+            occ_pts = []
+            occ_colors = []
+            landing_zones = []
+            
+            for k, v in self._voxel_map.items():
+                if 1.0/(1+np.exp(-v)) > 0.65:
+                    pt = self._to_world(*k)
+                    occ_pts.append(pt)
+                    cls_id = self._semantic_map.get(k, 0)
+                    occ_colors.append(cls_id)
+                    if cls_id == 6:  # landing_zone
+                        landing_zones.append(pt)
+                        
             free = [self._to_world(*k) for k, v in self._voxel_map.items() if 1.0/(1+np.exp(-v)) < 0.35]
-        if occ: self._pub_occ.publish(self._make_pc2(occ, stamp))
+            
+        if occ_pts: self._pub_occ.publish(self._make_pc2(occ_pts, occ_colors, stamp))
         if free and self.get_parameter('publish_free_space').value:
-            self._pub_free.publish(self._make_pc2(free, stamp))
+            self._pub_free.publish(self._make_pc2(free, None, stamp))
+            
+        # Publish landing zones if found
+        if landing_zones:
+            lz_msg = PoseArray()
+            lz_msg.header.stamp = stamp
+            lz_msg.header.frame_id = self._frame_id
+            for pt in landing_zones:
+                p = Pose()
+                p.position.x = float(pt[0])
+                p.position.y = float(pt[1])
+                p.position.z = float(pt[2])
+                p.orientation.w = 1.0
+                lz_msg.poses.append(p)
+            self._pub_lz.publish(lz_msg)
 
-    def _make_pc2(self, pts, stamp):
+    def _make_pc2(self, pts, colors, stamp):
         msg = PointCloud2()
         msg.header.stamp, msg.header.frame_id = stamp, self._frame_id
         msg.height, msg.width = 1, len(pts)
-        msg.fields = [PointField(name=n, offset=i*4, datatype=PointField.FLOAT32, count=1) for i, n in enumerate('xyz')]
-        msg.is_bigendian, msg.point_step, msg.row_step = False, 12, 12*len(pts)
-        msg.data = np.array(pts, dtype=np.float32).flatten().tobytes()
+        
+        msg.fields = [
+            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)
+        ]
+        
+        if colors is not None:
+            msg.fields.append(PointField(name='rgb', offset=12, datatype=PointField.FLOAT32, count=1))
+            msg.is_bigendian, msg.point_step, msg.row_step = False, 16, 16*len(pts)
+            
+            CLASS_COLORS = [(128,128,128),(0,255,0),(255,255,0),(0,0,255),(0,255,255),(128,128,0),(255,0,255),(255,0,0),(200,200,200),(100,100,100)]
+            import struct
+            data = bytearray()
+            for i, pt in enumerate(pts):
+                cls_id = colors[i]
+                if cls_id < len(CLASS_COLORS):
+                    r, g, b = CLASS_COLORS[cls_id]
+                else:
+                    r, g, b = 128, 128, 128
+                rgb = struct.unpack('f', struct.pack('I', (r << 16) | (g << 8) | b))[0]
+                data.extend(struct.pack('ffff', pt[0], pt[1], pt[2], rgb))
+            msg.data = bytes(data)
+        else:
+            msg.is_bigendian, msg.point_step, msg.row_step = False, 12, 12*len(pts)
+            msg.data = np.array(pts, dtype=np.float32).flatten().tobytes()
+            
         msg.is_dense = True
         return msg
 

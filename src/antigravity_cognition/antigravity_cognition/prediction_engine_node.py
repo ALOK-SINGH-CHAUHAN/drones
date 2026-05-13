@@ -147,8 +147,9 @@ class PredictionEngineNode(Node):
                     self._tracks[t_idx].class_name = det['class_name']
                     self._tracks[t_idx].last_detection_time = time.time()
 
-                    if self._tracks[t_idx].hits >= self.get_parameter('min_hits_to_confirm').value:
+                    if not self._tracks[t_idx].confirmed and self._tracks[t_idx].hits >= self.get_parameter('min_hits_to_confirm').value:
                         self._tracks[t_idx].confirmed = True
+                        self.get_logger().info(f'Track {self._tracks[t_idx].track_id} CONFIRMED (class: {self._tracks[t_idx].class_name})')
 
                 # Create new tracks for unmatched detections
                 for d_idx in unmatched_det:
@@ -163,7 +164,13 @@ class PredictionEngineNode(Node):
 
             # Remove dead tracks
             max_age = self.get_parameter('max_track_age').value
-            self._tracks = [t for t in self._tracks if t.misses < max_age]
+            alive_tracks = []
+            for t in self._tracks:
+                if t.misses < max_age:
+                    alive_tracks.append(t)
+                else:
+                    self.get_logger().info(f'Track {t.track_id} DEAD (age: {t.age}, hits: {t.hits})')
+            self._tracks = alive_tracks
 
             self._count += 1
 
@@ -248,6 +255,7 @@ class PredictionEngineNode(Node):
         track.hits = 1
         track.last_detection_time = time.time()
         self._tracks.append(track)
+        self.get_logger().info(f'Track {track.track_id} BORN (class: {track.class_name})')
 
     def _predict_trajectory(self, track):
         """Predict future trajectory using Kalman state propagation."""
