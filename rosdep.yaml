@@ -1,0 +1,24 @@
+# ANTIGRAVITY — ROS2 dependency manifest for rosdep
+# Install: rosdep install --from-paths src --ignore-src -y
+
+# Core ROS2
+rclpy:
+  ubuntu: [ros-humble-rclpy]
+std_msgs:
+  ubuntu: [ros-humble-std-msgs]
+geometry_msgs:
+  ubuntu: [ros-humble-geometry-msgs]
+sensor_msgs:
+  ubuntu: [ros-humble-sensor-msgs]
+nav_msgs:
+  ubuntu: [ros-humble-nav-msgs]
+visualization_msgs:
+  ubuntu: [ros-humble-visualization-msgs]
+tf2_ros:
+  ubuntu: [ros-humble-tf2-ros]
+
+# Actions
+action_msgs:
+  ubuntu: [ros-humble-action-msgs]
+rclpy_action:
+  ubuntu: [ros-humble-rclpy]

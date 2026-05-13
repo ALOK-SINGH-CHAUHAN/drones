@@ -1,0 +1,11 @@
+# ANTIGRAVITY — Mission Manager Configuration
+# =============================================
+
+mission_manager:
+  ros__parameters:
+    goal_tolerance_m: 0.5
+    waypoint_tolerance_m: 1.0
+    replan_interval_s: 5.0
+    progress_rate_hz: 2.0
+    max_mission_time_s: 300.0
+    safety_hold_timeout_s: 30.0

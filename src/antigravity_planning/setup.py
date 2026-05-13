@@ -15,5 +15,6 @@ setup(
         'global_planner_node = antigravity_planning.global_planner_node:main',
         'local_planner_node = antigravity_planning.local_planner_node:main',
         'rl_decision_node = antigravity_planning.rl_decision_node:main',
+        'mission_manager_node = antigravity_planning.mission_manager_node:main',
     ]},
 )

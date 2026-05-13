@@ -22,6 +22,7 @@ setup(
             'camera_node = antigravity_perception.camera_node:main',
             'imu_node = antigravity_perception.imu_node:main',
             'sensor_sync_node = antigravity_perception.sensor_sync_node:main',
+            'sensor_diagnostics_node = antigravity_perception.sensor_diagnostics_node:main',
         ],
     },
 )

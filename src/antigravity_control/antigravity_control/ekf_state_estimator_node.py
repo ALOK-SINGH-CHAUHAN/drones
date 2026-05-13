@@ -14,7 +14,7 @@ Acceptance Criteria (P3-T5):
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, TransformStamped
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32, String
 from nav_msgs.msg import Odometry
@@ -90,6 +90,16 @@ class EKFStateEstimatorNode(Node):
         self._last_imu_time = None
         self._lock = threading.Lock()
         self._initialized = False
+
+        # TF2 broadcaster for map → base_link transform
+        try:
+            from tf2_ros import TransformBroadcaster
+            self._tf_broadcaster = TransformBroadcaster(self)
+            self._tf_available = True
+        except ImportError:
+            self.get_logger().warn('tf2_ros not available — TF broadcasting disabled')
+            self._tf_broadcaster = None
+            self._tf_available = False
 
         # Sensor health tracking
         self._sensor_last_update = {'slam': 0, 'mcl': 0, 'imu': 0, 'baro': 0}
@@ -282,7 +292,26 @@ class EKFStateEstimatorNode(Node):
         odom.twist.twist.linear.x = float(x[self.VX])
         odom.twist.twist.linear.y = float(x[self.VY])
         odom.twist.twist.linear.z = float(x[self.VZ])
+        # Velocity covariance from EKF
+        vel_cov = np.zeros(36)
+        vel_cov[0] = P[self.VX, self.VX]; vel_cov[7] = P[self.VY, self.VY]; vel_cov[14] = P[self.VZ, self.VZ]
+        odom.twist.covariance = vel_cov.tolist()
         self._pub_odom.publish(odom)
+
+        # TF2 broadcast: map → base_link
+        if self._tf_available and self._tf_broadcaster:
+            t = TransformStamped()
+            t.header.stamp = stamp
+            t.header.frame_id = frame
+            t.child_frame_id = child
+            t.transform.translation.x = float(x[self.PX])
+            t.transform.translation.y = float(x[self.PY])
+            t.transform.translation.z = float(x[self.PZ])
+            t.transform.rotation.x = q[0]
+            t.transform.rotation.y = q[1]
+            t.transform.rotation.z = q[2]
+            t.transform.rotation.w = q[3]
+            self._tf_broadcaster.sendTransform(t)
 
         # Status
         active = [s for s, t in self._sensor_last_update.items() if time.time() - t < self._sensor_timeout]
