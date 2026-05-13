@@ -1,0 +1,9 @@
+# Set navigation goal
+geometry_msgs/PoseStamped goal_pose
+float32 tolerance_m         # Position tolerance (meters)
+float32 timeout_s           # Maximum time to reach goal
+bool allow_replan           # Enable automatic replanning
+---
+bool accepted
+string message
+uint32 plan_id

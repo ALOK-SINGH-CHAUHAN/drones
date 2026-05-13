@@ -1,0 +1,17 @@
+# Goal: Navigate to a target position
+geometry_msgs/PoseStamped goal_pose
+float32 speed_limit_mps         # Maximum speed (m/s)
+bool avoid_dynamic_obstacles    # Enable dynamic avoidance
+---
+# Result
+bool success
+float32 total_distance_m
+float32 total_time_s
+string final_status             # "reached", "aborted", "preempted"
+---
+# Feedback
+geometry_msgs/PoseStamped current_pose
+float32 distance_remaining_m
+float32 estimated_time_remaining_s
+float32 current_speed_mps
+string planner_status

@@ -1,0 +1,54 @@
+# ANTIGRAVITY Docker — Jetson Orin NX Deployment
+# Based on NVIDIA L4T with ROS2 Humble
+
+FROM nvcr.io/nvidia/l4t-pytorch:r35.4.1-pth2.1-py3
+
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip \
+    python3-dev \
+    build-essential \
+    cmake \
+    git \
+    libopencv-dev \
+    libeigen3-dev \
+    libpangolin-dev \
+    librealsense2-dev \
+    librealsense2-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# ROS2 Humble
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-humble-desktop \
+    ros-humble-cv-bridge \
+    ros-humble-image-transport \
+    ros-humble-message-filters \
+    ros-humble-tf2-ros \
+    ros-humble-rviz2 \
+    python3-colcon-common-extensions \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python dependencies
+RUN pip3 install --no-cache-dir \
+    ultralytics \
+    pymavlink \
+    pyrealsense2 \
+    scipy \
+    pyyaml \
+    octomap-python \
+    segment-anything \
+    open3d
+
+# Set up workspace
+WORKDIR /antigravity
+COPY . /antigravity/
+
+# Build ROS2 workspace
+RUN /bin/bash -c "source /opt/ros/humble/setup.bash && \
+    colcon build --symlink-install"
+
+# Entry point
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["bash"]

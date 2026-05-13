@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — YOLOv8 Detection Configuration
+# Object detection parameters for TensorRT inference
+# ═══════════════════════════════════════════════════════════════════════
+
+yolo_detector:
+  ros__parameters:
+    # Model configuration
+    model_path: "models/yolov8n_drone.engine"    # TensorRT engine
+    model_type: "yolov8"                          # yolov8, yolov8s, yolov8n
+    fallback_model_path: "models/yolov8n_drone.pt"  # PyTorch fallback
+    
+    # Inference settings
+    input_width: 640
+    input_height: 480
+    confidence_threshold: 0.45
+    nms_threshold: 0.5                            # Non-maximum suppression IoU
+    max_detections: 20
+    
+    # Target classes
+    class_names:
+      - "person"
+      - "vehicle"
+      - "animal"
+      - "unknown_moving"
+    num_classes: 4
+    
+    # Performance
+    use_tensorrt: true
+    use_fp16: true                                # Half precision on Jetson
+    use_int8: false                               # INT8 quantization
+    device: "cuda:0"
+    
+    # Temporal filtering
+    enable_temporal_smoothing: true
+    smoothing_window: 3                           # Frames for NMS over time
+    min_consecutive_detections: 2                 # Require N consecutive frames
+    
+    # 3D position estimation
+    estimate_3d_position: true
+    depth_topic: "/camera/depth"
+    camera_info_topic: "/camera/camera_info"
+    
+    # Publishing
+    detection_topic: "detections"
+    annotated_image_topic: "detection/annotated_image"
+    publish_annotated_image: true
+    publish_rate_hz: 30
+    
+    # Frame
+    detection_frame_id: "camera_optical_frame"

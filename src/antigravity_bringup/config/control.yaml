@@ -1,0 +1,81 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — PX4 Flight Control Configuration
+# PID tuning, MAVLink bridge, and offboard control parameters
+# ═══════════════════════════════════════════════════════════════════════
+
+px4_bridge:
+  ros__parameters:
+    # MAVLink connection
+    fcu_url: "/dev/ttyACM0:921600"       # Serial connection to Pixhawk
+    gcs_url: "udp://:14550@"             # Ground control station
+    target_system_id: 1
+    target_component_id: 1
+    
+    # Simulation mode
+    simulation_mode: false
+    
+    # Offboard control
+    offboard_mode_enabled: true
+    setpoint_rate_hz: 50                  # Position setpoint publish rate
+    offboard_timeout_s: 0.5              # Timeout before failsafe
+    
+    # Position control limits
+    max_velocity_xy_mps: 2.0             # Max horizontal speed
+    max_velocity_z_mps: 1.0              # Max vertical speed
+    max_acceleration_mps2: 2.0           # Max acceleration
+    max_yaw_rate_rps: 1.0                # Max yaw rate (rad/s)
+    
+    # Position setpoint smoothing
+    position_smoothing_enabled: true
+    smoothing_factor: 0.8                # Low-pass filter coefficient
+    
+    # Arming and takeoff
+    auto_arm: false                      # Never auto-arm on real hardware
+    takeoff_altitude_m: 1.5
+    landing_speed_mps: 0.5
+    
+    # Heartbeat
+    heartbeat_rate_hz: 2.0
+
+    # Frame IDs
+    map_frame: "map"
+    body_frame: "base_link"
+
+# PID gains (applied to PX4 firmware via parameters)
+pid_tuning:
+  ros__parameters:
+    # Roll PID
+    roll_p: 6.5
+    roll_i: 0.0
+    roll_d: 0.0
+    roll_rate_p: 0.15
+    roll_rate_i: 0.05
+    roll_rate_d: 0.003
+    
+    # Pitch PID  
+    pitch_p: 6.5
+    pitch_i: 0.0
+    pitch_d: 0.0
+    pitch_rate_p: 0.15
+    pitch_rate_i: 0.05
+    pitch_rate_d: 0.003
+    
+    # Yaw PID
+    yaw_p: 2.8
+    yaw_i: 0.0
+    yaw_d: 0.0
+    yaw_rate_p: 0.2
+    yaw_rate_i: 0.1
+    yaw_rate_d: 0.0
+    
+    # Altitude PID
+    altitude_p: 1.0
+    altitude_rate_p: 0.12
+    altitude_rate_i: 0.02
+    altitude_rate_d: 0.0
+    
+    # Position PID
+    position_p: 0.95
+    velocity_p: 0.09
+    velocity_i: 0.02
+    velocity_d: 0.01

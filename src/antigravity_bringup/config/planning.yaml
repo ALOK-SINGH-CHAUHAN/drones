@@ -1,0 +1,82 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — Planning Layer Configuration
+# Covers: Global Planner, Local Planner (MPC), RL Decision Layer
+# ═══════════════════════════════════════════════════════════════════════
+
+global_planner:
+  ros__parameters:
+    # ─── A* Planner ─────────────────────────────────────────────────
+    planner_type: "astar"           # "astar" or "rrt_star"
+    grid_resolution: 0.1            # [m] Planning grid resolution
+    obstacle_inflation_m: 0.5       # [m] Safety inflation around obstacles
+    diagonal_movement: true         # Allow diagonal movement in A*
+    heuristic_weight: 1.5           # A* heuristic weight (>1.0 = faster, less optimal)
+    max_planning_time_ms: 500.0     # Maximum time before returning best-effort path
+    replan_on_obstacle: true        # Auto-replan when new obstacles detected
+    replan_distance_threshold_m: 1.0  # Replan if path deviates this far
+
+    # ─── RRT* Planner (for 3D environments) ─────────────────────────
+    rrt_star_max_iterations: 5000
+    rrt_star_step_size: 0.3         # [m] Step size for tree expansion
+    rrt_star_goal_bias: 0.15        # Probability of sampling goal directly
+    rrt_star_rewire_radius: 1.0     # [m] Rewiring radius for optimization
+    rrt_star_3d_enabled: false      # Enable full 3D RRT* (requires OctoMap)
+
+    # ─── Path post-processing ───────────────────────────────────────
+    path_simplification: true       # Enable waypoint simplification
+    simplification_tolerance: 0.15  # [m] Maximum deviation from original path
+    max_waypoints: 100              # Maximum waypoints in output path
+
+    # ─── Topics ─────────────────────────────────────────────────────
+    map_topic: "/mapping/occupancy_grid"
+    goal_topic: "/planning/goal"
+    path_topic: "/planning/global_path"
+
+local_planner:
+  ros__parameters:
+    # ─── MPC Parameters ─────────────────────────────────────────────
+    solver_type: "gradient_descent"  # "gradient_descent" or "casadi"
+    control_rate_hz: 20.0            # MPC solve frequency
+    prediction_horizon: 15           # Number of prediction steps
+    dt: 0.1                          # [s] Time step per prediction
+    
+    # ─── Drone dynamics ─────────────────────────────────────────────
+    max_velocity_mps: 2.0            # [m/s] Maximum velocity
+    max_acceleration_mps2: 3.0       # [m/s^2] Maximum acceleration
+    max_yaw_rate_rps: 1.57           # [rad/s] Maximum yaw rate (~90°/s)
+    
+    # ─── Cost weights ───────────────────────────────────────────────
+    weight_position: 10.0            # Tracking error weight
+    weight_velocity: 1.0             # Velocity regulation weight
+    weight_control: 0.1              # Control effort penalty
+    weight_obstacle: 50.0            # Obstacle avoidance weight
+    weight_smoothness: 5.0           # Trajectory smoothness weight
+    
+    # ─── Obstacle avoidance ─────────────────────────────────────────
+    collision_check_radius_m: 2.5    # [m] Look-ahead for obstacle check
+    obstacle_clearance_m: 0.8        # [m] Minimum clearance from obstacles
+    dynamic_obstacle_weight: 2.0     # Extra weight for moving obstacles
+    
+    # ─── Topics ─────────────────────────────────────────────────────
+    global_path_topic: "/planning/global_path"
+    cmd_vel_topic: "/control/cmd_vel"
+    odom_topic: "/control/ekf_state"
+
+rl_decision:
+  ros__parameters:
+    # ─── Policy Configuration ────────────────────────────────────────
+    model_path: "models/ppo_nav_policy.zip"
+    inference_rate_hz: 5.0           # Policy query frequency
+    use_heuristic_fallback: true     # Use rule-based fallback if model unavailable
+    
+    # ─── Observation normalization ──────────────────────────────────
+    normalize_observations: true
+    obs_clip_range: 10.0             # Clip observations to [-10, 10]
+    
+    # ─── Action parameters ──────────────────────────────────────────
+    confidence_threshold: 0.6        # Minimum confidence to use RL action
+    cooldown_steps: 3                # Minimum steps between action changes
+    
+    # ─── Topics ─────────────────────────────────────────────────────
+    action_topic: "/planning/rl_action"
+    state_topic: "/control/ekf_state"

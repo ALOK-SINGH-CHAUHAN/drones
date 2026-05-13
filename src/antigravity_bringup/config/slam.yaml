@@ -1,0 +1,61 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — ORB-SLAM3 Configuration
+# Visual-Inertial SLAM parameters
+# ═══════════════════════════════════════════════════════════════════════
+
+orb_slam3:
+  ros__parameters:
+    # SLAM mode
+    slam_mode: "stereo_inertial"          # mono, stereo, rgbd, stereo_inertial
+    vocabulary_path: "models/ORBvoc.txt"
+    settings_path: "config/slam_camera.yaml"
+    
+    # Pose output
+    publish_rate_hz: 30                    # Target: >= 20 Hz
+    pose_topic: "slam/pose"
+    map_points_topic: "slam/map_points"
+    tracking_state_topic: "slam/state"
+    
+    # ORB Feature Parameters
+    num_features: 1200                     # Number of ORB features per frame
+    scale_factor: 1.2                      # Scale factor between pyramid levels
+    num_levels: 8                          # Number of pyramid levels
+    ini_th_fast: 20                        # FAST threshold (initial)
+    min_th_fast: 7                         # FAST threshold (minimum fallback)
+    
+    # Stereo matching
+    stereo_baseline_m: 0.05               # Camera baseline in meters
+    stereo_th_depth: 40.0                 # Depth threshold for stereo matching
+    
+    # Map management
+    enable_map_reuse: true                # Load/save map for relocalization
+    map_file: ""                          # Path to pre-built SLAM map
+    save_map_on_exit: true
+    
+    # Relocalization
+    relocalization_enabled: true
+    relocalization_timeout_s: 2.0         # Max time to attempt relocalization
+    min_relocalization_inliers: 15
+    
+    # IMU pre-integration
+    imu_frequency: 200.0                  # Hz
+    imu_noise_acc: 0.01                   # m/s^2
+    imu_noise_gyro: 0.001                 # rad/s
+    imu_walk_acc: 0.0002
+    imu_walk_gyro: 0.00002
+    
+    # Performance
+    use_viewer: false                     # Disable ORB-SLAM3 built-in viewer
+    frame_id: "map"
+    child_frame_id: "camera_link"
+    
+    # Camera calibration (RealSense D435i typical)
+    camera:
+      fx: 615.6707
+      fy: 615.9621
+      cx: 326.0741
+      cy: 240.2530
+      k1: 0.0
+      k2: 0.0
+      p1: 0.0
+      p2: 0.0

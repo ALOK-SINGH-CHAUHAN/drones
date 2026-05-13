@@ -1,0 +1,47 @@
+# ROS2 build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+
+# ML Models (large files)
+models/*.pt
+models/*.onnx
+models/*.engine
+models/*.trt
+!models/.gitkeep
+
+# Maps (large files)
+maps/*.bt
+maps/*.ot
+maps/*.pcd
+!maps/.gitkeep
+!maps/test_map.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker/*.tar
+
+# Logs
+*.log
+*.bag
+
+# Virtual environments
+venv/
+.env

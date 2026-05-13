@@ -1,0 +1,83 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ANTIGRAVITY — Perception Configuration
+# Camera and IMU driver parameters
+# ═══════════════════════════════════════════════════════════════════════
+
+camera_driver:
+  ros__parameters:
+    # Camera hardware settings
+    camera_type: "realsense"              # "realsense" or "zed"
+    serial_number: ""                     # Leave empty for auto-detect
+    
+    # Image settings
+    image_width: 640
+    image_height: 480
+    fps: 30
+    color_format: "bgr8"
+    
+    # Depth settings
+    depth_enabled: true
+    depth_width: 640
+    depth_height: 480
+    depth_fps: 30
+    min_depth_m: 0.3
+    max_depth_m: 10.0
+    
+    # Stereo settings (RealSense)
+    enable_infra1: true
+    enable_infra2: true
+    emitter_enabled: true
+    
+    # Auto-exposure
+    enable_auto_exposure: true
+    exposure_us: 8000                     # Manual exposure if auto disabled
+    gain: 16
+    
+    # Frame ID
+    camera_frame_id: "camera_link"
+    optical_frame_id: "camera_optical_frame"
+
+imu_driver:
+  ros__parameters:
+    # IMU settings
+    imu_topic: "imu/data"
+    publish_rate_hz: 200                  # Target: >= 200 Hz
+    
+    # IMU source
+    use_camera_imu: true                  # Use RealSense built-in IMU
+    external_imu_port: "/dev/ttyUSB0"    # External IMU serial port
+    external_imu_baud: 115200
+    
+    # IMU calibration
+    accel_bias_x: 0.0
+    accel_bias_y: 0.0
+    accel_bias_z: 0.0
+    gyro_bias_x: 0.0
+    gyro_bias_y: 0.0
+    gyro_bias_z: 0.0
+    
+    # Noise parameters
+    accel_noise_density: 0.01            # m/s^2/sqrt(Hz)
+    gyro_noise_density: 0.001            # rad/s/sqrt(Hz)
+    accel_random_walk: 0.0002            # m/s^3/sqrt(Hz)
+    gyro_random_walk: 0.00002            # rad/s^2/sqrt(Hz)
+    
+    # Frame
+    imu_frame_id: "imu_link"
+
+sensor_synchronizer:
+  ros__parameters:
+    # Synchronization settings
+    sync_tolerance_ms: 2.0               # Max camera-IMU timestamp difference
+    queue_size: 10
+    approximate_sync: true
+    
+    # Topics to synchronize
+    camera_topic: "camera/image_raw"
+    depth_topic: "camera/depth"
+    imu_topic: "imu/data"
+    
+    # Output
+    synced_camera_topic: "synced/image"
+    synced_depth_topic: "synced/depth"
+    synced_imu_topic: "synced/imu"
