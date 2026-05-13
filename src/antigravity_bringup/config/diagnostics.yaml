@@ -1,0 +1,10 @@
+# ANTIGRAVITY — Sensor Diagnostics Configuration
+# =================================================
+
+sensor_diagnostics:
+  ros__parameters:
+    check_rate_hz: 2
+    camera_min_fps: 15.0
+    imu_min_hz: 100.0
+    slam_min_hz: 10.0
+    sensor_timeout_s: 3.0

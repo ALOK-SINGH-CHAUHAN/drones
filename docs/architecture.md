@@ -12,13 +12,16 @@ ANTIGRAVITY is a GPS-independent autonomous vision-based drone navigation stack 
 │    Safety Arbiter → Geofence → System Monitor                    │
 │    Can OVERRIDE any command at any time                          │
 ├──────────────────────────────────────────────────────────────────┤
+│                      MISSION MANAGEMENT                          │
+│    Mission Manager (goal acceptance, waypoint queue, progress)   │
+├──────────────────────────────────────────────────────────────────┤
 │                       PLANNING LAYER                             │
 │    Global Planner (A*/RRT*)  →  Local Planner (MPC @ 20 Hz)     │
 │    RL Decision Layer (PPO) — optional supervisor                 │
 ├──────────────────────────────────────────────────────────────────┤
 │                       CONTROL LAYER                              │
 │    Trajectory Optimizer (min-snap)  →  PX4 Bridge (MAVLink)      │
-│    EKF State Estimator (100 Hz, 15-state)                        │
+│    EKF State Estimator (100 Hz, 15-state, TF2 broadcast)         │
 ├──────────────────────────────────────────────────────────────────┤
 │                      COGNITION LAYER                             │
 │    OctoMap World Model  →  Semantic Segmentation (SAM)           │
@@ -36,11 +39,84 @@ ANTIGRAVITY is a GPS-independent autonomous vision-based drone navigation stack 
 │    Camera (RealSense/ZED @ 30 Hz)  →  IMU (200 Hz)              │
 │    Sensor Sync (<2ms alignment)                                  │
 │    YOLOv8 Detection (TensorRT FP16)                              │
+│    Sensor Diagnostics (rate/health monitoring)                    │
 ├──────────────────────────────────────────────────────────────────┤
 │                        MAP LAYER                                 │
 │    Map Server (PGM/YAML, OctoMap .bt)                            │
 │    Pre-built environment maps                                    │
 └──────────────────────────────────────────────────────────────────┘
+```
+
+## Node Connectivity (Mermaid)
+
+```mermaid
+graph TB
+    subgraph Perception
+        CAM[Camera Node] --> SYNC[Sensor Sync]
+        IMU[IMU Node] --> SYNC
+        DIAG[Sensor Diagnostics]
+    end
+
+    subgraph SLAM
+        SYNC --> SLAM[ORB-SLAM3]
+    end
+
+    subgraph Detection
+        CAM --> YOLO[YOLOv8 Detection]
+    end
+
+    subgraph Localization
+        MAP[Map Server] --> MCL[MCL Node]
+        SLAM --> MCL
+    end
+
+    subgraph Cognition
+        YOLO --> PRED[Prediction Engine]
+        CAM --> SEG[Semantic Segmentation]
+        SEG --> OCTO[OctoMap World Model]
+    end
+
+    subgraph Planning
+        MCL --> GP[Global Planner]
+        PRED --> LP[Local Planner MPC]
+        GP --> LP
+        RL[RL Decision] --> LP
+        MM[Mission Manager] --> GP
+    end
+
+    subgraph Control
+        SLAM --> EKF[EKF Estimator]
+        MCL --> EKF
+        IMU --> EKF
+        LP --> TRAJ[Trajectory Optimizer]
+        TRAJ --> PX4[PX4 Bridge]
+    end
+
+    subgraph Safety
+        SA[Safety Arbiter] --> PX4
+        GF[Geofence] --> SA
+        SM[System Monitor] --> SA
+        DIAG --> SA
+    end
+```
+
+## Mission State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> PLANNING: goto / waypoints command
+    PLANNING --> NAVIGATING: path received
+    NAVIGATING --> PLANNING: waypoint reached (not final)
+    NAVIGATING --> COMPLETED: final waypoint reached
+    NAVIGATING --> PAUSED: safety CRITICAL/EMERGENCY
+    NAVIGATING --> PAUSED: pause command
+    PAUSED --> NAVIGATING: resume / safety NOMINAL
+    NAVIGATING --> ABORTING: abort command
+    NAVIGATING --> FAILED: timeout exceeded
+    COMPLETED --> [*]
+    FAILED --> [*]
+    ABORTING --> [*]
 ```
 
 ## Data Flow
@@ -115,7 +191,7 @@ YOLOv8 ──→ Prediction Engine ───────────────
 ```
 antigravity_interfaces (msgs/srvs/actions)
     ↓
-antigravity_perception (camera, IMU, sync)
+antigravity_perception (camera, IMU, sync, diagnostics)
     ↓
 antigravity_slam (ORB-SLAM3)
     ↓
@@ -127,9 +203,9 @@ antigravity_localization (MCL particle filter)
     ↓
 antigravity_cognition (world model, semantics, prediction)
     ↓
-antigravity_planning (A*, MPC, RL)
+antigravity_planning (A*, MPC, RL, mission manager)
     ↓
-antigravity_control (EKF, trajectory optimizer, PX4 bridge)
+antigravity_control (EKF + TF2, trajectory optimizer, PX4 bridge)
     ↓
 antigravity_safety (arbiter, geofence, monitor)
     ↓
@@ -158,6 +234,8 @@ All tunable parameters are in `src/antigravity_bringup/config/`:
 | `localization.yaml` | MCL particle count, sensor model, resampling |
 | `cognition.yaml` | OctoMap resolution, semantic classes, prediction horizon |
 | `planning.yaml` | A*/RRT* params, MPC horizon, RL model path |
+| `mission.yaml` | Goal tolerance, waypoint queue, mission timeout |
 | `control.yaml` | PX4 FCU URL, PID gains, offboard rates |
 | `ekf.yaml` | EKF noise models, sensor weights, trajectory constraints |
 | `safety.yaml` | Battery thresholds, geofence bounds, collision distances |
+| `diagnostics.yaml` | Sensor minimum rates, health thresholds |
