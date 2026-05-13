@@ -1,0 +1,60 @@
+# ANTIGRAVITY — Python Dependencies
+# Install: pip install -r requirements.txt
+
+# Core
+numpy>=1.24.0
+scipy>=1.10.0
+PyYAML>=6.0
+
+# ROS2 (installed via apt/rosdep, listed for reference)
+# rclpy
+# sensor_msgs
+# geometry_msgs
+# nav_msgs
+# visualization_msgs
+# tf2_ros
+# cv_bridge
+# message_filters
+
+# Computer Vision
+opencv-python>=4.7.0
+opencv-contrib-python>=4.7.0
+
+# ML / Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0  # YOLOv8
+
+# Segmentation
+# segment-anything  # Install from: https://github.com/facebookresearch/segment-anything
+
+# Reinforcement Learning
+stable-baselines3>=2.0.0
+gymnasium>=0.28.0
+
+# Simulation
+# gazebo (installed via apt)
+# airsim  # Optional: pip install airsim
+
+# Mapping
+# octomap-python  # pip install octomap-python
+# open3d>=0.17.0  # For point cloud processing
+
+# MAVLink / PX4
+pymavlink>=2.4.0
+# mavros (installed via apt)
+
+# Serial (external IMU)
+pyserial>=3.5
+
+# Optimization (MPC)
+# casadi>=3.6.0  # Optional: pip install casadi
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Development
+flake8>=6.0.0
+black>=23.0.0
+mypy>=1.0.0
