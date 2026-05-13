@@ -36,6 +36,7 @@ class SemanticSegmentationNode(Node):
         reliable_qos = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, history=HistoryPolicy.KEEP_LAST, depth=5)
 
         self._pub_semantic = self.create_publisher(Image, 'semantics/segmented_image', reliable_qos)
+        self._pub_semantic_raw = self.create_publisher(Image, 'semantics/raw_labels', reliable_qos)
         self._pub_labels = self.create_publisher(String, 'semantics/labels_json', reliable_qos)
         self._sub_image = self.create_subscription(Image, '/camera/image_raw', self._image_cb, sensor_qos)
 
@@ -101,6 +102,12 @@ class SemanticSegmentationNode(Node):
             msg = self._bridge.cv2_to_imgmsg(seg_img, 'bgr8')
             msg.header = self._last_image.header
             self._pub_semantic.publish(msg)
+
+            # Publish raw labels for world model
+            msg_raw = self._bridge.cv2_to_imgmsg(labels, 'mono8')
+            msg_raw.header = self._last_image.header
+            self._pub_semantic_raw.publish(msg_raw)
+
             import json
             lbl_msg = String()
             unique = np.unique(labels)
